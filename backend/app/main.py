@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.api.routes import analysis, generation, health
+from app.api.routes import analysis, generation, health, studio
 
 # ---------------------------------------------------------------------------
 # Loglama
@@ -78,6 +78,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(analysis.router, prefix="/api/v1/products", tags=["Product Analysis"])
 app.include_router(generation.router, prefix="/api/v1/products", tags=["Image Generation"])
+app.include_router(studio.router, prefix="/api/v1/studio", tags=["Studio — Multi-Image"])
 
 # ---------------------------------------------------------------------------
 # Statik dosyalar (üretilen görseller)

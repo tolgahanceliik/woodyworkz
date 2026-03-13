@@ -11,7 +11,7 @@ const BASE_URL = "/api/v1";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 120_000, // Görüntü üretimi uzun sürebilir
+  timeout: 180_000, // Görüntü üretimi uzun sürebilir
 });
 
 // Hata interceptor
@@ -29,6 +29,42 @@ api.interceptors.response.use(
 
 export async function checkHealth() {
   const { data } = await api.get("/health");
+  return data;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Studio — /api/v1/studio  (yeni çok-görüntülü akış)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 1-4 fotoğrafı yükleyip ahşap ürün analizini başlatır.
+ * @param {File[]} files         - Yüklenen dosya listesi (1-4 adet)
+ * @param {string} [extraContext] - Ek bağlam metni
+ * @returns {Promise<{session_id, images_received, analysis}>}
+ */
+export async function uploadAndAnalyze(files, extraContext = "") {
+  const form = new FormData();
+  files.forEach((f) => form.append("images", f));
+  if (extraContext) form.append("extra_context", extraContext);
+  const { data } = await api.post("/studio/upload", form);
+  return data;
+}
+
+/**
+ * Analiz + ortam → 5 profesyonel çekim üret.
+ * @param {File}   referenceFile  - Referans ürün fotoğrafı
+ * @param {object} analysis       - uploadAndAnalyze'dan dönen analysis nesnesi
+ * @param {string} environment    - studio|nature|home|workshop|minimalist|luxury|outdoor_cafe
+ * @param {string} [styleOverride]
+ * @returns {Promise<{job_id, shots, completed, failed, message}>}
+ */
+export async function generateShots(referenceFile, analysis, environment, styleOverride = "") {
+  const form = new FormData();
+  form.append("reference_image", referenceFile);
+  form.append("analysis_json", JSON.stringify(analysis));
+  form.append("environment", environment);
+  if (styleOverride) form.append("style_override", styleOverride);
+  const { data } = await api.post("/studio/generate", form);
   return data;
 }
 
